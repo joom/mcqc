@@ -1,9 +1,10 @@
 module Main where
-import Rev
+
 import Datatypes
+import Rev
 import System.Environment
 
-deriving instance Show a => Show (Coq_list a)
+deriving instance (Show a) => Show (Coq_list a)
 
 main :: IO ()
 main = do
@@ -11,4 +12,3 @@ main = do
   let test = series (read arg :: Int)
   putStrLn $ "Reversed"
   putStrLn . show . rev $ test
-

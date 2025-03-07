@@ -1,10 +1,12 @@
 module Main where
-import Sort
+
 import Datatypes
+import Sort
 import System.Environment
 
-deriving instance Show a => Show (Coq_list a)
-deriving instance Show a => Show (Coq_option a)
+deriving instance (Show a) => Show (Coq_list a)
+
+deriving instance (Show a) => Show (Coq_option a)
 
 main :: IO ()
 main = do
@@ -12,4 +14,3 @@ main = do
   let test = series (read arg :: Int)
   putStrLn $ "Sorted"
   putStrLn . show . sort $ test
-

@@ -1,7 +1,8 @@
 module Main where
+
 import System.Process
 
-main:: IO ()
+main :: IO ()
 main = do
-    fd <- runCommand "lit test/"
-    return ()
+  fd <- runCommand "lit test/"
+  return ()
