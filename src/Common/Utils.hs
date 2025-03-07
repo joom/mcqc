@@ -1,5 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE OverloadedStrings #-}
 module Common.Utils where
 import Classes.Typeful ()
 import Classes.Pretty ()
@@ -21,11 +19,11 @@ warn s = trace ("Warning: " ++ s)
 
 -- Zip names and types to fields
 zipf :: [Text] -> [CType] -> [CDef]
-zipf = zipWith (\a b -> CDef a b)
+zipf = zipWith CDef
 
 -- map across a list of CDefs
 mapf :: (Text -> CType -> a) -> [CDef] -> [a]
-mapf f = map (\d -> case d of (CDef { .. }) -> f _nm _ty)
+mapf f = map (\(CDef { .. }) -> f _nm _ty)
 
 -- Give an ord of names to types, useful for making constructors
 givenm :: Char -> [CType] -> [CDef]

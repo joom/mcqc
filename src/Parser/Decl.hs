@@ -1,10 +1,8 @@
-{-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE OverloadedStrings #-}
 module Parser.Decl where
 import Parser.Expr
 import Data.Aeson
+import qualified Data.Aeson.KeyMap as KM
 import Data.Text (Text)
-import Data.HashMap.Strict
 
 -- Declarations
 data Declaration =
@@ -16,16 +14,16 @@ data Declaration =
 
 instance FromJSON Declaration where
   parseJSON (Object v) =
-      case v ! "what" of
-        "decl:ind"      -> IndDecl  <$> v .:  "name"
-                                    <*> v .:? "argnames"     .!= []
-                                    <*> v .:? "constructors" .!= []
-        "decl:type"     -> TypeDecl <$> v .:  "name"
-                                    <*> v .:? "argnames"     .!= []
-                                    <*> v .:  "value"
-        "decl:fixgroup" -> FixDecl  <$> v .:? "fixlist"      .!= []
-        "decl:term"     -> TermDecl <$> v .:  "name"
-                                    <*> v .:  "type"
-                                    <*> v .:  "value"
-        _               -> fail $ "Unknown declaration type: " ++ show v
-  parseJSON _ = fail $ "Unknown declaration JSON representation"
+      case KM.lookup "what" v of
+        Just "decl:ind"      -> IndDecl  <$> v .:  "name"
+                                         <*> v .:? "argnames"     .!= []
+                                         <*> v .:? "constructors" .!= []
+        Just "decl:type"     -> TypeDecl <$> v .:  "name"
+                                         <*> v .:? "argnames"     .!= []
+                                         <*> v .:  "value"
+        Just "decl:fixgroup" -> FixDecl  <$> v .:? "fixlist"      .!= []
+        Just "decl:term"     -> TermDecl <$> v .:  "name"
+                                         <*> v .:  "type"
+                                         <*> v .:  "value"
+        _                    -> fail $ "Unknown declaration type: " ++ show v
+  parseJSON _ = fail "Unknown declaration JSON representation"

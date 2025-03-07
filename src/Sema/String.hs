@@ -1,5 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE OverloadedStrings #-}
 module Sema.String where
 import CIR.Expr
 import Common.Utils

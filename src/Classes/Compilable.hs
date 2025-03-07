@@ -1,10 +1,3 @@
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE FlexibleInstances #-}
 module Classes.Compilable where
 import Parser.Mod
 import Parser.Decl
@@ -34,7 +27,7 @@ instance Compilable Module (Env CFile) where
         let alldecls = map comp declarations
         -- Get the context so far
         ctx <- get
-        let untyped = filter (\d -> not $ isUnifiable ctx d) alldecls
+        let untyped = filter (not . isUnifiable ctx) alldecls
         -- Nullary functions are not objects
         let nullary = filter (/= mempty) . map (\case
                 CDFunc { _fargs = [], .. } -> _nm _fd
@@ -59,13 +52,13 @@ instance Compilable Declaration CDecl where
     comp FixDecl { fixlist = [ Fix { name = Just nm, body = ExprLambda { .. }, .. } ] } =
         case comp typ of
           (CTFunc { .. }) -> CDFunc (CDef nm . addPtr $ _fret) (zipf argnames . map addPtr $ _fins) cbody
-          (e) -> error $ "Fixpoint with non-function type " ++ show e
+          e -> error $ "Fixpoint with non-function type " ++ show e
         where cbody = semantics . comp $ body
     -- Main function is special
     comp TermDecl { val = ExprLambda { .. }, name = "main", .. } =
         case comp typ of
           (CTExpr "io" [CTBase "void"]) -> CDFunc (CDef "main" $ CTBase "int") [] cbody
-          (e) -> error $ "Main function of non 'io<void>' type " ++ show e
+          e -> error $ "Main function of non 'io<void>' type " ++ show e
         where mkbody CExprCall { _cd = CDef { _nm = "return" }, _cparams = [a] } = CExprSeq a retz
               mkbody CExprSeq  { .. } = CExprSeq _left $ mkbody _right
               mkbody o = CExprSeq o retz
@@ -74,14 +67,14 @@ instance Compilable Declaration CDecl where
     -- Lambda Declarations -> C Functions
     comp TermDecl { val = ExprLambda { .. }, .. } =
         case comp typ of
-          (CTFunc { .. }) -> CDFunc (CDef name . addPtr $ _fret) (zipf argnames . map addPtr $ _fins) cbody
+          CTFunc { .. } -> CDFunc (CDef name . addPtr $ _fret) (zipf argnames . map addPtr $ _fins) cbody
           -- A constant term declaration is defined as a function with no args and the expression as the body
-          (e) -> CDFunc (CDef name e) [] cbody
+          e -> CDFunc (CDef name e) [] cbody
         where cbody = semantics . comp $ body
     -- If an Ind of base is defined as a base type, ignore
     comp IndDecl  { .. }
         | name `elem` Conf.base = CDEmpty
-        | (T.toLower name) `elem` Conf.base = CDEmpty
+        | T.toLower name `elem` Conf.base = CDEmpty
     -- Inductive type
     comp i@IndDecl  { .. } = contract . expand $ i
     -- Type Declarations
@@ -112,7 +105,7 @@ instance Compilable Expr CExpr where
     comp ExprApply       { func = ExprFix { funcs = [Fix { name = Just nm, .. }] }, .. } = fixpoint <> call
         where fixpoint = CExprStmt (mkauto nm) $ comp body
               call = CExprCall (mkauto nm) $ map comp args
-    comp ExprLet         { .. } = assignment <> (comp body)
+    comp ExprLet         { .. } = assignment <> comp body
         where assignment = CExprStmt (mkauto name) $ comp nameval
     comp ExprFix         { funcs = [ Fix { name = Just nm, .. } ] } = CExprStmt (mkauto nm) $ comp body
     comp ExprFix         { .. } = error $ "Unsure what to do with " ++ show funcs

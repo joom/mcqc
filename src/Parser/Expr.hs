@@ -1,12 +1,8 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE DuplicateRecordFields #-}
 module Parser.Expr where
 import GHC.Generics hiding (Constructor)
 import Data.Aeson
 import Data.Text
-import qualified Data.HashMap.Strict as M
+import qualified Data.Aeson.KeyMap as KM
 
 -- Patterns
 data Pattern = PatCtor { name :: Text,  argnames :: [Text] }
@@ -51,18 +47,18 @@ data Expr = ExprLambda { argnames :: [Text], body :: Expr }
 
 instance FromJSON Pattern where
   parseJSON (Object v) =
-      case M.lookup "what" v of
+      case KM.lookup "what" v of
         Just "pat:constructor" -> PatCtor          <$> v .:  "name"
                                                    <*> v .:? "argnames" .!= []
         Just "pat:tuple"       -> PatTuple         <$> v .:? "items" .!= []
         Just "pat:rel"         -> PatRel           <$> v .:  "name"
         Just "pat:wild"        -> pure PatWild
         _                      -> fail $ "Unknown pattern object: " ++ show v
-  parseJSON _ = fail $ "Unknown pattern JSON representation"
+  parseJSON _ = fail "Unknown pattern JSON representation"
 
 instance FromJSON Fix where
   parseJSON (Object v) =
-      case M.lookup "what" v of
+      case KM.lookup "what" v of
         Just "fixgroup:item" -> Fix <$> v .:? "name"
                                     <*> v .:  "value"
                                     <*> v .:  "type"
@@ -70,11 +66,11 @@ instance FromJSON Fix where
                                     <*> v .:  "body"
                                     <*> pure TUnknown
         _                    -> fail $ "Unknown fixpoint type " ++ show v
-  parseJSON _ = fail $ "Unknown fixpoint JSON representation"
+  parseJSON _ = fail "Unknown fixpoint JSON representation"
 
 instance FromJSON Type where
   parseJSON (Object v) =
-      case M.lookup "what" v of
+      case KM.lookup "what" v of
         Just "type:arrow"       -> TArrow  <$> v .:  "left"
                                            <*> v .:  "right"
         Just "type:var"         -> TVar    <$> v .:  "name"
@@ -87,11 +83,11 @@ instance FromJSON Type where
         Just "type:dummy"       -> pure TDummy {}
         Just s                  -> fail $ "Unknown kind: " ++ show v ++ " because " ++ show s
         Nothing                 -> fail $ "No 'what' quantifier for type: " ++ show v
-  parseJSON _ = fail $ "Unknown type JSON representation"
+  parseJSON _ = fail "Unknown type JSON representation"
 
 instance FromJSON Expr where
   parseJSON (Object v) =
-      case M.lookup "what" v of
+      case KM.lookup "what" v of
         Just "expr:lambda"      -> ExprLambda      <$> v .:? "argnames" .!= []
                                                    <*> v .:  "body"
         Just "expr:case"        -> ExprCase        <$> v .:  "expr"
@@ -110,6 +106,6 @@ instance FromJSON Expr where
         Just "expr:axiom"       -> pure ExprDummy {}
         Just "expr:dummy"       -> pure ExprDummy {}
         Just s                  -> fail $ "Unknown expr: " ++  show v  ++ " because " ++ show s
-        Nothing                 -> fail $ "Expression with no 'what' quanitifier is not allowed"
-  parseJSON _ = fail $ "Unknown expr JSON representation"
+        Nothing                 -> fail "Expression with no 'what' quanitifier is not allowed"
+  parseJSON _ = fail "Unknown expr JSON representation"
 

@@ -1,11 +1,9 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
 module Classes.Pretty where
 import CIR.Expr
 import CIR.Decl
 import Classes.Typeful
 import Common.Pretty
-import Data.Text.Prettyprint.Doc
+import Prettyprinter
 import qualified Data.Text as T
 import qualified Data.List as L
 
@@ -14,12 +12,12 @@ instance Pretty CDef where
     pretty CDef { .. } = pretty _ty <+> pretty _nm
 
 instance Pretty CType where
-  pretty CTFunc  { .. } = group $ pretty _fret <> (parens . commatize $ map pretty _fins)
+  pretty CTFunc  { .. } = group $ pretty _fret <> (parens . commatize . map pretty) _fins
   pretty CTExpr  { .. } = pretty _tbase <> "<" <> commatize (map pretty _tins) <> ">"
   pretty CTVar   { .. } = pretty _vname <> "<" <> commatize (map pretty _vargs) <> ">"
   pretty CTBase  { .. } = pretty _base
   -- Use template letters starting at T as is custom in C++
-  pretty CTFree  { .. } = pretty $ stringsFromTo 'T' 'Z' !! (_idx - 1)
+  pretty CTFree  { .. } = pretty (stringsFromTo 'T' 'Z' !! (_idx - 1))
   pretty CTAuto  {}     = "auto" :: Doc ann
   pretty CTPtr   { .. } = "std::shared_ptr<" <> pretty _inner <> ">"
 
@@ -46,7 +44,7 @@ instance Pretty CExpr where
   pretty CExprStr    { .. } = "string(\"" <> pretty _str <> "\")"
   pretty CExprNat    { .. } = "(nat)" <> pretty _nat
   pretty CExprBool   { .. } = pretty . T.toLower . T.pack . show $ _bool
-  pretty CExprProd   { .. } = "std::make_pair" <> (parens $ pretty _fst <> "," <+> pretty _snd)
+  pretty CExprProd   { .. } = "std::make_pair" <> parens (pretty _fst <> "," <+> pretty _snd)
   pretty CExprSeq    { .. } = pretty _left <> ";" <> line <> pretty _right
   pretty CExprStmt   { _sd = CDef { _nm = "_", .. }, .. } = pretty _sbody
   pretty CExprStmt   { _sd = CDef { .. }, .. } = pretty _ty <+> pretty _nm <+> "=" <+> pretty _sbody
@@ -72,10 +70,10 @@ instance Pretty CDecl where
   pretty CDStruct { .. } =
           mkTemplateLine (map gettype _fields)
           <> "struct" <+> pretty _sn <+> "{"
-          <> line <> (tab . vcat . map (\x -> pretty x <> ";") $ _fields)
-          <> line <> (tab $ pretty _sn <> "(" <> (commatize . map pretty $ _fields) <> ") {")
-          <> line <> (tab . tab . vcat . map (\x -> "this->" <> toNm x <+> "=" <+> toNm x <> ";") $ _fields)
-          <> line <> (tab $ "};")
+          <> line <> (tab . vcat . map (\x -> pretty x <> ";")) _fields
+          <> line <> tab (pretty _sn <> "(" <> (commatize . map pretty) _fields <> ") {")
+          <> line <> (tab . tab . vcat . map (\x -> "this->" <> toNm x <+> "=" <+> toNm x <> ";")) _fields
+          <> line <> tab "};"
           <> line <> "};" <> line
     where toNm = pretty . _nm
   pretty CDEmpty {} = mempty
@@ -86,7 +84,7 @@ instance Pretty CDecl where
 -- Pretty print the template line
 mkTemplateLine :: [CType] -> Doc ann
 mkTemplateLine argsT
-    | length (prettytempl nfreevars argsT) > 0 = "template<" <> (commatize . L.nub $ prettytempl nfreevars argsT) <> ">" <> line
+    | not (null (prettytempl nfreevars argsT)) = "template<" <> (commatize . L.nub $ prettytempl nfreevars argsT) <> ">" <> line
     | otherwise = mempty
     where nfreevars = maximum . map getMaxVaridx $ argsT
           mktemplate n = pretty $ stringsFromTo 'T' 'Z' !! n

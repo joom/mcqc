@@ -1,10 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE AllowAmbiguousTypes #-}
 module CIR.Expr where
 import GHC.Generics
 import Data.Aeson
@@ -22,7 +15,7 @@ data CDef = CDef { _nm :: Text, _ty :: CType }
 
 -- Untyped definition
 mkauto :: Text -> CDef
-mkauto nm = CDef (toCName nm) $ CTAuto
+mkauto nm = CDef (toCName nm) CTAuto
 
 -- C++ Types
 data CType =

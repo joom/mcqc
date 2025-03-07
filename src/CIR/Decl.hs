@@ -1,10 +1,3 @@
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE OverloadedStrings #-}
 module CIR.Decl where
 import CIR.Expr hiding (omapM)
 import GHC.Generics
@@ -73,4 +66,3 @@ instance MonoTraversable CDecl where
     otraverse f CDSeq { .. } = CDSeq <$> otraverse f _left <*> otraverse f _right
     otraverse _ CDEmpty = pure CDEmpty
     otraverse f d = f d
-

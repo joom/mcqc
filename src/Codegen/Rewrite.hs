@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE BangPatterns #-}
 module Codegen.Rewrite where
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -22,6 +20,5 @@ toCName = unquote . unctor . last . T.splitOn "."
 cannonicalizeFn :: Text -> Text
 cannonicalizeFn name =
     case T.stripPrefix "coq_" name of
-        (Just cannon) -> cannon
-        (Nothing) -> T.toLower name
-
+        Just cannon -> cannon
+        Nothing -> T.toLower name

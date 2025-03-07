@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
 module Classes.Nameful where
 import CIR.Decl
 import CIR.Expr

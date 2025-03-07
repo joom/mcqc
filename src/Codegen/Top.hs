@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings  #-}
-{-# LANGUAGE RecordWildCards #-}
 module Codegen.Top where
 import CIR.Expr
 import CIR.Decl

@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings  #-}
 module Sema.Bool where
 import Data.MonoTraversable
 import CIR.Expr

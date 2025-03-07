@@ -1,5 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE OverloadedStrings #-}
 module Codegen.Ind where
 import Classes.Typeful
 import Classes.Nameful
@@ -44,9 +42,10 @@ expand :: Declaration -> CDInd
 expand IndDecl { .. } = CDInd (CDef iname indtype) $ map mkctorD constructors
     where mkctorD = mkctor iargs indtype
           indtype = case iargs of
-                        ([]) -> CTBase iname
-                        (_)  -> CTExpr iname [CTFree $ length iargs]
+                        [] -> CTBase iname
+                        _  -> CTExpr iname [CTFree $ length iargs]
           iname = toCTBase name
+expand _ = error "Cannot expand non-inductive declaration"
 
 -- Contract indermediate representation to multiple concatenated CDecl
 contract :: CDInd -> CDecl
@@ -64,19 +63,21 @@ toCtorT n nm CTFunc { .. }
     | freedom > 0 = CTExpr nm [CTFree i | i<- [1..freedom]]
     | otherwise = CTBase nm
     where freedom = maximum $ n:map getMaxVaridx _fins
+toCtorT _ _ _ = error "Unsupported type"
 
 -- Make a lambda clause to a match
 mkMatchClause :: Int -> Text -> CDef -> CExpr
 mkMatchClause nfree fn CDef { _ty = ft@CTFunc { .. }, .. } =
     CExprLambda [CDef "_" $ toCtorT nfree _nm ft] $ CExprCall (CDef fn CTAuto) (dodots $ length _fins)
     where dodots n = [CExprVar ("_" `T.append` "." `T.append` T.pack [i]) | i <- take n ['a'..]]
+mkMatchClause _ _ _ = error "Unsupported match clause"
 
 -- Make a match statement for unfolding the Inductive type
 mkMatch :: CDef -> [CDef] -> CDecl
 mkMatch CDef { .. } ctors =
-    CDFunc (CDef "match" CTAuto) ((CDef "self" $ CTPtr _ty):fdefs) $
+    CDFunc (CDef "match" CTAuto) (CDef "self" (CTPtr _ty):fdefs) $
       CExprCall (CDef "return" CTAuto) [
-        CExprCall (CDef "gmatch" CTAuto) $ (CExprVar "self"):(zipWith mkClause fnames ctors)
+        CExprCall (CDef "gmatch" CTAuto) (CExprVar "self" : zipWith mkClause fnames ctors)
       ]
     where freedom = getMaxVaridx _ty
           mkClause = mkMatchClause freedom
@@ -91,7 +92,7 @@ mkCtorStruct unaliasT CDef { _nm = name, _ty = CTFunc { .. } } =
           mkRecTypes rec
             | CTPtr _fret == rec = CTPtr unaliasT
             | otherwise = rec
-mkCtorStruct _ CDef { .. } = error $ "Cannot export constructor " ++ show (_nm)
+mkCtorStruct _ CDef { .. } = error $ "Cannot export constructor " ++ show _nm
 
 -- Make C++ variant an alias for Coq inductive type
 mkIndAlias :: CDef -> [CDef] -> CDecl
@@ -110,3 +111,4 @@ mkCtorFunc CDef { .. } CDef { _nm = ctornm, _ty = CTFunc { .. } } =
     where fdptr = CDef (T.toLower ctornm) (CTPtr _ty)
           fd = CDef ctornm _ty
           defs  = givenm 'a' _fins
+mkCtorFunc _ _ = error "Cannot export constructor"

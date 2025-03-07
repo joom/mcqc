@@ -1,11 +1,10 @@
-{-# LANGUAGE OverloadedStrings #-}
 module Common.Pretty where
 import Control.Monad
-import Data.Text.Prettyprint.Doc
-import Data.Text.Prettyprint.Doc.Render.Text
+import Prettyprinter
+import Prettyprinter.Render.Text
 
 instance Eq (Doc ann) where
-    x == y = (render x) == (render y)
+    x == y = render x == render y
         where render = renderLazy . layoutPretty defaultLayoutOptions
 
 -- Add parenteses if the argument needs them
@@ -17,7 +16,7 @@ breakcommatize :: Pretty a => [a] -> Doc ann
 breakcommatize [] = mempty
 breakcommatize [a] = pretty a
 breakcommatize (a:args) = softcommatize (pretty a) $
-     align . tab $ concatWith softcommatize prettyargs
+      align . tab $ concatWith softcommatize prettyargs
     where softcommatize x y = x <> "," <> softline <> y
           prettyargs = map pretty args
 
@@ -42,6 +41,6 @@ ptrDoc = "template<typename T>"
 
 stringsFromTo :: Char -> Char -> [[Char]]
 stringsFromTo t z = stringsFromToM 1 t z
-    where ts n = take n (repeat t)
-          zs n = take n (repeat z)
+    where ts n = replicate n t
+          zs n = replicate n z
           stringsFromToM n t z = zipWithM (\a b -> [a..b]) (ts n) (zs n) ++ stringsFromToM (n+1) t z

@@ -1,15 +1,10 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE RecordWildCards #-}
 module CIR.File where
 import Classes.Pretty()
 import GHC.Generics
 import CIR.Decl
 import Data.Aeson
 import Data.Text (Text)
-import Data.Text.Prettyprint.Doc
+import Prettyprinter
 import qualified Data.Text as T
 import qualified Data.List as L
 
@@ -24,7 +19,7 @@ instance Pretty CFile where
            <> line
            <> line <> (vcat . map (\p -> "using namespace" <+> pretty (T.toTitle p) <> ";") $ _includes)
            <> line
-           <> line <> (pretty _decl)
+           <> line <> pretty _decl
 
 instance Semigroup CFile where
     a <> b = CFile (L.sort . L.nub $ _includes a ++ _includes b) $ _decl a <> _decl b

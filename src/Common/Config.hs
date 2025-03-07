@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module Common.Config where
 import CIR.Expr
 import Types.Context
@@ -18,7 +17,7 @@ base = [ "nat", "unit", "ascii", "bool", "io", "string", "prod", "option" ]
 nativeContext :: Context CType
 nativeContext = M.fromList [
     -- Ptr
-    ("std::make_shared", [CTFree 1] --> (CTPtr $ CTFree 1)),
+    ("std::make_shared", [CTFree 1] --> CTPtr (CTFree 1)),
     -- Nat
     ("succ",      [CTBase "nat"] --> CTBase "nat"),
     ("pred",      [CTBase "nat"] --> CTBase "nat"),
@@ -61,7 +60,7 @@ nativeContext = M.fromList [
                         [CTExpr "option" [CTFree 1]] --> CTExpr "IO" [CTFree 1],
                         CTExpr "option" [CTFree 1]
                   ] --> CTExpr "IO" [CTFree 1]),
-    ("spawn",     [[CTFree 1] --> (CTBase "void"), CTFree 1] --> CTExpr "IO" []),
+    ("spawn",     [[CTFree 1] --> CTBase "void", CTFree 1] --> CTExpr "IO" []),
     ("print",     [CTBase "string"] --> CTExpr "IO" []),
     ("ret",       [CTFree 1] --> CTExpr "IO" [CTFree 1]),
     ("bind",      [

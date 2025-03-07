@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
 module Classes.Typeful where
 import Classes.Nameful
 import CIR.Expr
@@ -11,7 +9,6 @@ import Data.Maybe
 import Data.Text (Text)
 import qualified Data.Map  as M
 import qualified Data.Text as T
-import Debug.Trace
 
 -- This class is for instances with types
 class Typeful a where
@@ -108,10 +105,10 @@ instance Typeful CExpr where
         -- Match with something from the context
         | otherwise =
             case ctx M.!? _nm of
-              (Just CTFunc { .. }) -> CExprCall <$> newD
+              Just (CTFunc { .. }) -> CExprCall <$> newD
                                                 <*> zipWithM (unify ctx) _fins _cparams
-              (_) ->  CExprCall <$> newD
-                                <*> pure _cparams
+              _ ->  CExprCall <$> newD
+                              <*> pure _cparams
         where newD = CDef _nm <$> unify ctx t _ty
     -- Or explicit if it comes from the first rule handling return calls
     unify ctx t s@CExprSeq { .. } = retexpr >>= (\t -> pure $ listToSeq (first ++ [t]))

@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings  #-}
 module Sema.Prod where
 import Data.MonoTraversable
 import CIR.Expr
